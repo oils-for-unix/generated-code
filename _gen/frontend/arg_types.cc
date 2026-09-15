@@ -385,52 +385,60 @@ DefaultPair_c defaults_50[] = {
     {},
 };
 
-const char* arity0_51[] = {"a", nullptr};
+const char* arity0_51[] = {"S", "p", nullptr};
 
 DefaultPair_c defaults_51[] = {
+    {"S", flag_type_e::Bool, {.b = false}},
+    {"p", flag_type_e::Bool, {.b = false}},
+    {},
+};
+
+const char* arity0_52[] = {"a", nullptr};
+
+DefaultPair_c defaults_52[] = {
     {"a", flag_type_e::Bool, {.b = false}},
     {},
 };
 
-const char* arity0_52[] = {"f", "v", nullptr};
+const char* arity0_53[] = {"f", "v", nullptr};
 
-DefaultPair_c defaults_52[] = {
+DefaultPair_c defaults_53[] = {
     {"f", flag_type_e::Bool, {.b = false}},
     {"v", flag_type_e::Bool, {.b = false}},
     {},
 };
 
-Action_c actions_long_53[] = {
+Action_c actions_long_54[] = {
     {"extern", ActionType_c::SetToTrue, "extern", nullptr},
     {},
 };
 
-DefaultPair_c defaults_53[] = {
+DefaultPair_c defaults_54[] = {
     {"extern", flag_type_e::Bool, {.b = false}},
     {},
 };
 
-const char* arity0_54[] = {"n", nullptr};
+const char* arity0_55[] = {"n", nullptr};
 
-Action_c actions_long_54[] = {
+Action_c actions_long_55[] = {
     {"all", ActionType_c::SetToTrue, "all", nullptr},
     {"verbose", ActionType_c::SetToTrue, "verbose", nullptr},
     {},
 };
 
-DefaultPair_c defaults_54[] = {
+DefaultPair_c defaults_55[] = {
     {"all", flag_type_e::Bool, {.b = false}},
     {"n", flag_type_e::Bool, {.b = false}},
     {"verbose", flag_type_e::Bool, {.b = false}},
     {},
 };
 
-Action_c arity1_55[] = {
+Action_c arity1_56[] = {
     {"n", ActionType_c::SetAttachedBool, "n", nullptr},
     {},
 };
 
-Action_c actions_long_55[] = {
+Action_c actions_long_56[] = {
     {"end", ActionType_c::SetToString, "end", nullptr},
     {"j8", ActionType_c::SetAttachedBool, "j8", nullptr},
     {"json", ActionType_c::SetAttachedBool, "json", nullptr},
@@ -438,7 +446,7 @@ Action_c actions_long_55[] = {
     {},
 };
 
-DefaultPair_c defaults_55[] = {
+DefaultPair_c defaults_56[] = {
     {"end", flag_type_e::Str, {.s = "\n"}},
     {"j8", flag_type_e::Bool, {.b = false}},
     {"json", flag_type_e::Bool, {.b = false}},
@@ -499,41 +507,42 @@ FlagSpec_c kFlagSpecs[] = {
     { "try_", nullptr, nullptr, actions_long_48, nullptr, defaults_48 },
     { "type", arity0_49, nullptr, nullptr, nullptr, defaults_49 },
     { "ulimit", arity0_50, nullptr, actions_long_50, nullptr, defaults_50 },
-    { "unalias", arity0_51, nullptr, nullptr, nullptr, defaults_51 },
-    { "unset", arity0_52, nullptr, nullptr, nullptr, defaults_52 },
-    { "use", nullptr, nullptr, actions_long_53, nullptr, defaults_53 },
-    { "wait", arity0_54, nullptr, actions_long_54, nullptr, defaults_54 },
-    { "write", nullptr, arity1_55, actions_long_55, nullptr, defaults_55 },
+    { "umask", arity0_51, nullptr, nullptr, nullptr, defaults_51 },
+    { "unalias", arity0_52, nullptr, nullptr, nullptr, defaults_52 },
+    { "unset", arity0_53, nullptr, nullptr, nullptr, defaults_53 },
+    { "use", nullptr, nullptr, actions_long_54, nullptr, defaults_54 },
+    { "wait", arity0_55, nullptr, actions_long_55, nullptr, defaults_55 },
+    { "write", nullptr, arity1_56, actions_long_56, nullptr, defaults_56 },
     {},
 };
 
-Action_c short_56[] = {
+Action_c short_57[] = {
     {"n", ActionType_c::SetToString, "n", nullptr},
     {"s", ActionType_c::SetToTrue, "s", nullptr},
     {},
 };
 
-DefaultPair_c defaults_56[] = {
+DefaultPair_c defaults_57[] = {
     {"n", flag_type_e::Str, {}},
     {"s", flag_type_e::Bool, {.b = false}},
     {},
 };
 
-Action_c short_57[] = {
+Action_c short_58[] = {
     {"c", ActionType_c::SetToString, "c", nullptr},
     {},
 };
 
 const char* params_0[] = {"jlines", "tsv8", nullptr};
 
-Action_c long_57[] = {
+Action_c long_58[] = {
     {"begin", ActionType_c::SetToInt, "begin", nullptr},
     {"end", ActionType_c::SetToInt, "end", nullptr},
     {"format", ActionType_c::SetToString, "format", params_0},
     {},
 };
 
-DefaultPair_c defaults_57[] = {
+DefaultPair_c defaults_58[] = {
     {"begin", flag_type_e::Int, {.i = -1}},
     {"c", flag_type_e::Str, {}},
     {"end", flag_type_e::Int, {.i = -1}},
@@ -545,7 +554,7 @@ const char* params_1[] = {"alias", "binding", "builtin", "command", "directory",
 
 const char* params_2[] = {"bashdefault", "default", "dirnames", "filenames", "nospace", "plusdirs", nullptr};
 
-Action_c short_58[] = {
+Action_c short_59[] = {
     {"A", ActionType_c::SetNamedAction, nullptr, params_1},
     {"C", ActionType_c::SetToString, "C", nullptr},
     {"F", ActionType_c::SetToString, "F", nullptr},
@@ -569,7 +578,7 @@ Action_c short_58[] = {
 
 const char* plus_2[] = {"o", nullptr};
 
-DefaultPair_c defaults_58[] = {
+DefaultPair_c defaults_59[] = {
     {"C", flag_type_e::Str, {}},
     {"F", flag_type_e::Str, {}},
     {"P", flag_type_e::Str, {}},
@@ -583,7 +592,7 @@ const char* params_3[] = {"alias", "binding", "builtin", "command", "directory",
 
 const char* params_4[] = {"bashdefault", "default", "dirnames", "filenames", "nospace", "plusdirs", nullptr};
 
-Action_c short_59[] = {
+Action_c short_60[] = {
     {"A", ActionType_c::SetNamedAction, nullptr, params_3},
     {"C", ActionType_c::SetToString, "C", nullptr},
     {"D", ActionType_c::SetToTrue, "D", nullptr},
@@ -609,7 +618,7 @@ Action_c short_59[] = {
 
 const char* plus_3[] = {"o", nullptr};
 
-DefaultPair_c defaults_59[] = {
+DefaultPair_c defaults_60[] = {
     {"C", flag_type_e::Str, {}},
     {"D", flag_type_e::Bool, {.b = false}},
     {"E", flag_type_e::Bool, {.b = false}},
@@ -623,19 +632,19 @@ DefaultPair_c defaults_59[] = {
 
 const char* params_5[] = {"bashdefault", "default", "dirnames", "filenames", "nospace", "plusdirs", nullptr};
 
-Action_c short_60[] = {
+Action_c short_61[] = {
     {"o", ActionType_c::SetNamedOption, nullptr, params_5},
     {},
 };
 
 const char* plus_4[] = {"o", nullptr};
 
-Action_c short_61[] = {
+Action_c short_62[] = {
     {"C", ActionType_c::SetOption, "noclobber", nullptr},
     {"E", ActionType_c::SetOption, "errtrace", nullptr},
     {"O", ActionType_c::SetNamedOption_shopt, nullptr, nullptr},
     {"a", ActionType_c::SetOption, "allexport", nullptr},
-    {"c", ActionType_c::SetToString_q, "c", nullptr},
+    {"c", ActionType_c::SetToString, "c", nullptr},
     {"e", ActionType_c::SetOption, "errexit", nullptr},
     {"f", ActionType_c::SetOption, "noglob", nullptr},
     {"h", ActionType_c::SetOption, "hashall", nullptr},
@@ -655,7 +664,7 @@ const char* params_7[] = {"minimal", "nice", nullptr};
 
 const char* params_8[] = {"cat-em", "deps", "find-lhs-array", "fmt", "lint", "lossless-cat", "syntax-tree", "test", "tokens", "ysh-ify", nullptr};
 
-Action_c long_61[] = {
+Action_c long_62[] = {
     {"ast-format", ActionType_c::SetToString, "ast-format", params_6},
     {"completion-demo", ActionType_c::SetToTrue, "completion-demo", nullptr},
     {"completion-display", ActionType_c::SetToString, "completion-display", params_7},
@@ -680,7 +689,7 @@ Action_c long_61[] = {
 
 const char* plus_5[] = {"C", "E", "O", "a", "e", "f", "h", "n", "o", "u", "v", "x", nullptr};
 
-DefaultPair_c defaults_61[] = {
+DefaultPair_c defaults_62[] = {
     {"ast_format", flag_type_e::Str, {.s = "abbrev-text"}},
     {"c", flag_type_e::Str, {}},
     {"completion_demo", flag_type_e::Bool, {.b = false}},
@@ -704,7 +713,7 @@ DefaultPair_c defaults_61[] = {
     {},
 };
 
-Action_c short_62[] = {
+Action_c short_63[] = {
     {"C", ActionType_c::SetOption, "noclobber", nullptr},
     {"E", ActionType_c::SetOption, "errtrace", nullptr},
     {"O", ActionType_c::SetNamedOption_shopt, nullptr, nullptr},
@@ -723,13 +732,13 @@ Action_c short_62[] = {
 const char* plus_6[] = {"C", "E", "O", "a", "e", "f", "h", "n", "o", "u", "v", "x", nullptr};
 
 FlagSpecAndMore_c kFlagSpecsAndMore[] = {
-    { "compadjust", short_56, nullptr, nullptr, defaults_56 },
-    { "compexport", short_57, long_57, nullptr, defaults_57 },
-    { "compgen", short_58, nullptr, plus_2, defaults_58 },
-    { "complete", short_59, nullptr, plus_3, defaults_59 },
-    { "compopt", short_60, nullptr, plus_4, nullptr },
-    { "main", short_61, long_61, plus_5, defaults_61 },
-    { "set", short_62, nullptr, plus_6, nullptr },
+    { "compadjust", short_57, nullptr, nullptr, defaults_57 },
+    { "compexport", short_58, long_58, nullptr, defaults_58 },
+    { "compgen", short_59, nullptr, plus_2, defaults_59 },
+    { "complete", short_60, nullptr, plus_3, defaults_60 },
+    { "compopt", short_61, nullptr, plus_4, nullptr },
+    { "main", short_62, long_62, plus_5, defaults_62 },
+    { "set", short_63, nullptr, plus_6, nullptr },
     {},
 };
 }  // namespace arg_types

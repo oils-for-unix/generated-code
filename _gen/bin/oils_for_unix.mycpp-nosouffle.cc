@@ -94,6 +94,7 @@ GLOBAL_STR(S_hxb, ")");
 GLOBAL_STR(S_Ezk, ") ");
 GLOBAL_STR(S_Fgw, "*");
 GLOBAL_STR(S_jnE, "+");
+GLOBAL_STR(S_DAk, "+-=");
 GLOBAL_STR(S_Coy, "+=");
 GLOBAL_STR(S_Cce, ",");
 GLOBAL_STR(S_tgp, ", ");
@@ -841,6 +842,8 @@ GLOBAL_STR(S_dae, "expected a block arg");
 GLOBAL_STR(S_top, "expected a command to run");
 GLOBAL_STR(S_CBb, "expected a message to display");
 GLOBAL_STR(S_nrF, "expected a number of seconds");
+GLOBAL_STR(S_fjk, "expected an argument");
+GLOBAL_STR(S_wFx, "expected argument to '-c'");
 GLOBAL_STR(S_iix, "expected arguments");
 GLOBAL_STR(S_Bvq, "expected at least 1 arg, or a literal block { }");
 GLOBAL_STR(S_twC, "expected expr to eval to a Str");
@@ -989,7 +992,8 @@ GLOBAL_STR(S_owh, "num_shifted");
 GLOBAL_STR(S_Ala, "o");
 GLOBAL_STR(S_Bww, "obj[index] expected List or Dict");
 GLOBAL_STR(S_rcA, "obj[index] expected List, Dict, or Obj");
-GLOBAL_STR(S_ela, "oils warning: umask with symbolic input isn't implemented");
+GLOBAL_STR(S_fkf, "oils warning: actionlist is required");
+GLOBAL_STR(S_wpF, "oils warning: symbolic mode operator cannot be empty");
 GLOBAL_STR(S_jlA, "oils-err");
 GLOBAL_STR(S_afu, "oils-for-unix");
 GLOBAL_STR(S_vqm, "oils-ref");
@@ -1064,6 +1068,7 @@ GLOBAL_STR(S_ddf, "return");
 GLOBAL_STR(S_CAv, "rm");
 GLOBAL_STR(S_ubi, "runes");
 GLOBAL_STR(S_pkv, "runproc");
+GLOBAL_STR(S_eds, "rwxXstugo");
 GLOBAL_STR(S_anC, "s");
 GLOBAL_STR(S_uok, "s ");
 GLOBAL_STR(S_vjw, "search");
@@ -1141,8 +1146,9 @@ GLOBAL_STR(S_qEi, "type");
 GLOBAL_STR(S_efv, "type_errors");
 GLOBAL_STR(S_hzm, "typed is a YSH keyword, but this is OSH.");
 GLOBAL_STR(S_rsz, "u");
+GLOBAL_STR(S_odj, "ugoa");
 GLOBAL_STR(S_otx, "ulimit");
-GLOBAL_STR(S_pdn, "umask: unexpected arguments");
+GLOBAL_STR(S_lsa, "umask");
 GLOBAL_STR(S_Brd, "unalias");
 GLOBAL_STR(S_oAe, "unique_id");
 GLOBAL_STR(S_zxo, "unix suffix implemented");
@@ -1425,7 +1431,6 @@ namespace process_osh {  // forward declare
   class ForkWait;
   class Exec;
   class Wait;
-  class Umask;
   class Ulimit;
   class Kill;
 }
@@ -1466,6 +1471,11 @@ namespace readline_osh {  // forward declare
 namespace trap_osh {  // forward declare
   class TrapState;
   class Trap;
+}
+
+namespace umask_osh {  // forward declare
+  class SymbolicClauseParser;
+  class Umask;
 }
 
 namespace alloc {  // forward declare
@@ -4954,22 +4964,6 @@ class Wait : public ::vm::_Builtin {
   DISALLOW_COPY_AND_ASSIGN(Wait)
 };
 
-class Umask : public ::vm::_Builtin {
- public:
-  Umask();
-  virtual int Run(cmd_value::Argv* cmd_val);
-  
-  static constexpr uint32_t field_mask() {
-    return ::vm::_Builtin::field_mask();
-  }
-
-  static constexpr ObjHeader obj_header() {
-    return ObjHeader::ClassFixed(field_mask(), sizeof(Umask));
-  }
-
-  DISALLOW_COPY_AND_ASSIGN(Umask)
-};
-
 BigStr* _LimitString(mops::BigInt lim, int factor);
 class Ulimit : public ::vm::_Builtin {
  public:
@@ -5545,6 +5539,54 @@ class Trap : public ::vm::_Builtin {
 
 
 }  // declare namespace trap_osh
+
+namespace umask_osh {  // declare
+
+extern BigStr* _WHO;
+extern BigStr* _OP;
+extern BigStr* _PERM_U_PERMCOPY;
+int _WhoCharToBitset(BigStr* who_ch);
+int _PermlistCharToBitset(BigStr* permlist_ch);
+int _PermlistToBits(int permlist, int initial_mask);
+int _SetMask(int wholist, int perm, int mask);
+int _ClearMask(int wholist, int perm, int mask);
+class SymbolicClauseParser {
+ public:
+  SymbolicClauseParser(BigStr* clause);
+  bool AtEnd();
+  BigStr* Ch();
+  int ParseWholist();
+  Tuple2<bool, int> ParseNextAction(int wholist, int mask, int initial_mask);
+  BigStr* clause{};
+  int i{};
+
+  static constexpr ObjHeader obj_header() {
+    return ObjHeader::ClassScanned(1, sizeof(SymbolicClauseParser));
+  }
+
+  DISALLOW_COPY_AND_ASSIGN(SymbolicClauseParser)
+};
+
+Tuple2<bool, int> _ParseClause(int mask, int initial_mask, BigStr* clause);
+Tuple2<bool, int> _ParseClauseList(int initial_mask, List<BigStr*>* clause_list);
+class Umask : public ::vm::_Builtin {
+ public:
+  Umask();
+  virtual int Run(cmd_value::Argv* cmd_val);
+  
+  static constexpr uint32_t field_mask() {
+    return ::vm::_Builtin::field_mask();
+  }
+
+  static constexpr ObjHeader obj_header() {
+    return ObjHeader::ClassFixed(field_mask(), sizeof(Umask));
+  }
+
+  DISALLOW_COPY_AND_ASSIGN(Umask)
+};
+
+
+}  // declare namespace umask_osh
 
 namespace alloc {  // declare
 
@@ -8425,12 +8467,11 @@ class AppendEvalFlag : public ::args::_Action {
 
 class _ArgAction : public ::args::_Action {
  public:
-  _ArgAction(BigStr* name, bool quit_parsing_flags, List<BigStr*>* valid = nullptr);
+  _ArgAction(BigStr* name, List<BigStr*>* valid = nullptr);
   virtual value_asdl::value_t* _Value(BigStr* arg, syntax_asdl::loc_t* location);
   virtual bool OnMatch(BigStr* attached_arg, args::Reader* arg_r, args::_Attributes* out);
 
   BigStr* name{};
-  bool quit_parsing_flags{};
   List<BigStr*>* valid{};
   
   static constexpr uint32_t field_mask() {
@@ -8480,7 +8521,7 @@ class SetToFloat : public ::args::_ArgAction {
 
 class SetToString : public ::args::_ArgAction {
  public:
-  SetToString(BigStr* name, bool quit_parsing_flags, List<BigStr*>* valid = nullptr);
+  SetToString(BigStr* name, List<BigStr*>* valid = nullptr);
   virtual value_asdl::value_t* _Value(BigStr* arg, syntax_asdl::loc_t* location);
   
   static constexpr uint32_t field_mask() {
@@ -8613,7 +8654,7 @@ class SetNamedAction : public ::args::_Action {
 
 args::_Attributes* Parse(flag_spec::_FlagSpec* spec, args::Reader* arg_r);
 args::_Attributes* ParseLikeEcho(flag_spec::_FlagSpec* spec, args::Reader* arg_r);
-args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* arg_r);
+args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* arg_r, bool sh_dash_c = false);
 
 }  // declare namespace args
 
@@ -8623,7 +8664,7 @@ void _DoesNotAccept(runtime_asdl::ProcArgs* proc_args);
 Tuple2<args::_Attributes*, args::Reader*> ParseCmdVal(BigStr* spec_name, cmd_value::Argv* cmd_val, bool accept_typed_args = false);
 Tuple2<args::_Attributes*, args::Reader*> ParseLikeEcho(BigStr* spec_name, cmd_value::Argv* cmd_val);
 args::_Attributes* Parse(BigStr* spec_name, args::Reader* arg_r);
-args::_Attributes* ParseMore(BigStr* spec_name, args::Reader* arg_r);
+args::_Attributes* ParseMore(BigStr* spec_name, args::Reader* arg_r, bool sh_dash_c = false);
 
 }  // declare namespace flag_util
 
@@ -19959,41 +20000,6 @@ int Wait::_Run(cmd_value::Argv* cmd_val) {
   return status;
 }
 
-Umask::Umask() {
-  ;  // pass
-}
-
-int Umask::Run(cmd_value::Argv* cmd_val) {
-  List<BigStr*>* argv = nullptr;
-  int mask;
-  BigStr* a = nullptr;
-  int new_mask;
-  StackRoot _root0(&cmd_val);
-  StackRoot _root1(&argv);
-  StackRoot _root2(&a);
-
-  argv = cmd_val->argv->slice(1);
-  if (len(argv) == 0) {
-    mask = posix::umask(0);
-    posix::umask(mask);
-    print(StrFormat("0%03o", mask));
-    return 0;
-  }
-  if (len(argv) == 1) {
-    a = argv->at(0);
-    try {
-      new_mask = to_int(a, 8);
-    }
-    catch (ValueError*) {
-      print_stderr(S_ela);
-      return 1;
-    }
-    posix::umask(new_mask);
-    return 0;
-  }
-  e_usage(S_pdn, loc::Missing);
-}
-
 BigStr* _LimitString(mops::BigInt lim, int factor) {
   mops::BigInt i;
   if (mops::Equal(lim, mops::FromC(RLIM_INFINITY))) {
@@ -22855,6 +22861,309 @@ int Trap::Run(cmd_value::Argv* cmd_val) {
 }
 
 }  // define namespace trap_osh
+
+namespace umask_osh {  // define
+
+using runtime_asdl::cmd_value;
+using mylib::print_stderr;
+BigStr* _WHO = S_odj;
+BigStr* _OP = S_DAk;
+BigStr* _PERM_U_PERMCOPY = S_eds;
+
+int _WhoCharToBitset(BigStr* who_ch) {
+  StackRoot _root0(&who_ch);
+
+  if (str_equals(who_ch, S_rsz)) {
+    return 4;
+  }
+  if (str_equals(who_ch, S_ukF)) {
+    return 2;
+  }
+  if (str_equals(who_ch, S_Ala)) {
+    return 1;
+  }
+  if (str_equals(who_ch, S_gCD)) {
+    return 7;
+  }
+  assert(0);  // AssertionError
+}
+
+int _PermlistCharToBitset(BigStr* permlist_ch) {
+  StackRoot _root0(&permlist_ch);
+
+  if (str_equals(permlist_ch, S_nAr_1)) {
+    return 256;
+  }
+  if (str_equals(permlist_ch, S_pfC)) {
+    return 128;
+  }
+  if (str_equals(permlist_ch, S_rqD)) {
+    return 64;
+  }
+  if (str_equals(permlist_ch, S_awm)) {
+    return 32;
+  }
+  if (str_equals(permlist_ch, S_anC)) {
+    return 16;
+  }
+  if (str_equals(permlist_ch, S_omF)) {
+    return 8;
+  }
+  if (str_equals(permlist_ch, S_rsz)) {
+    return 4;
+  }
+  if (str_equals(permlist_ch, S_ukF)) {
+    return 2;
+  }
+  if (str_equals(permlist_ch, S_Ala)) {
+    return 1;
+  }
+  assert(0);  // AssertionError
+}
+
+int _PermlistToBits(int permlist, int initial_mask) {
+  int perm;
+  perm = 0;
+  if ((permlist & 256) != 0) {
+    perm |= 4;
+  }
+  if ((permlist & 128) != 0) {
+    perm |= 2;
+  }
+  if ((permlist & 64) != 0) {
+    perm |= 1;
+  }
+  if (((permlist & 32) != 0 and (initial_mask & 73) != 0)) {
+    perm |= 1;
+  }
+  if ((permlist & 16) != 0) {
+    perm |= 0;
+  }
+  if ((permlist & 8) != 0) {
+    perm |= 0;
+  }
+  if ((permlist & 4) != 0) {
+    perm |= ((~initial_mask & 448) >> 6);
+  }
+  if ((permlist & 2) != 0) {
+    perm |= ((~initial_mask & 56) >> 3);
+  }
+  if ((permlist & 1) != 0) {
+    perm |= ((~initial_mask & 7) >> 0);
+  }
+  return perm;
+}
+
+int _SetMask(int wholist, int perm, int mask) {
+  if ((wholist & 4) != 0) {
+    mask |= (perm << 6);
+  }
+  if ((wholist & 2) != 0) {
+    mask |= (perm << 3);
+  }
+  if ((wholist & 1) != 0) {
+    mask |= (perm << 0);
+  }
+  return mask;
+}
+
+int _ClearMask(int wholist, int perm, int mask) {
+  if ((wholist & 4) != 0) {
+    mask &= (511 - (perm << 6));
+  }
+  if ((wholist & 2) != 0) {
+    mask &= (511 - (perm << 3));
+  }
+  if ((wholist & 1) != 0) {
+    mask &= (511 - (perm << 0));
+  }
+  return mask;
+}
+
+SymbolicClauseParser::SymbolicClauseParser(BigStr* clause) {
+  this->clause = clause;
+  this->i = 0;
+}
+
+bool SymbolicClauseParser::AtEnd() {
+  return this->i >= len(this->clause);
+}
+
+BigStr* SymbolicClauseParser::Ch() {
+  return this->clause->at(this->i);
+}
+
+int SymbolicClauseParser::ParseWholist() {
+  int wholist;
+  if (!str_contains(_WHO, this->Ch())) {
+    return 7;
+  }
+  wholist = 0;
+  while (!this->AtEnd()) {
+    if (!str_contains(_WHO, this->Ch())) {
+      break;
+    }
+    wholist |= _WhoCharToBitset(this->Ch());
+    this->i += 1;
+  }
+  return wholist;
+}
+
+Tuple2<bool, int> SymbolicClauseParser::ParseNextAction(int wholist, int mask, int initial_mask) {
+  BigStr* op = nullptr;
+  int perm;
+  int permlist;
+  StackRoot _root0(&op);
+
+  op = this->Ch();
+  if (!str_contains(_OP, op)) {
+    print_stderr(StrFormat("oils warning: expected one of `%s` at start of action instead of `%s`", _OP, op));
+    return Tuple2<bool, int>(false, 0);
+  }
+  this->i += 1;
+  if (str_equals(op, S_bby)) {
+    mask = _SetMask(wholist, 7, mask);
+  }
+  if ((this->AtEnd() or !str_contains(_PERM_U_PERMCOPY, this->Ch()))) {
+    if ((str_equals(op, S_jnE) or str_equals(op, S_bby))) {
+      return Tuple2<bool, int>(true, mask);
+    }
+    else {
+      if (str_equals(op, S_Bjq)) {
+        return Tuple2<bool, int>(true, mask);
+      }
+    }
+  }
+  perm = 0;
+  permlist = 0;
+  while (!(this->AtEnd() or str_contains(_OP, this->Ch()))) {
+    if (!str_contains(_PERM_U_PERMCOPY, this->Ch())) {
+      print_stderr(StrFormat("oil warning: expected one of `%s` in permlist instead of `%s`", _PERM_U_PERMCOPY, this->Ch()));
+      return Tuple2<bool, int>(false, 0);
+    }
+    permlist |= _PermlistCharToBitset(this->Ch());
+    this->i += 1;
+  }
+  perm = _PermlistToBits(permlist, initial_mask);
+  if ((str_equals(op, S_jnE) or str_equals(op, S_bby))) {
+    return Tuple2<bool, int>(true, _ClearMask(wholist, perm, mask));
+  }
+  else {
+    if (str_equals(op, S_Bjq)) {
+      return Tuple2<bool, int>(true, _SetMask(wholist, perm, mask));
+    }
+  }
+  return Tuple2<bool, int>(false, 0);
+}
+
+Tuple2<bool, int> _ParseClause(int mask, int initial_mask, BigStr* clause) {
+  umask_osh::SymbolicClauseParser* parser = nullptr;
+  int wholist;
+  bool ok;
+  StackRoot _root0(&clause);
+  StackRoot _root1(&parser);
+
+  if (len(clause) == 0) {
+    print_stderr(S_wpF);
+    return Tuple2<bool, int>(false, 0);
+  }
+  parser = Alloc<SymbolicClauseParser>(clause);
+  wholist = parser->ParseWholist();
+  if (parser->AtEnd()) {
+    print_stderr(S_fkf);
+    return Tuple2<bool, int>(false, 0);
+  }
+  while (true) {
+    Tuple2<bool, int> tup0 = parser->ParseNextAction(wholist, mask, initial_mask);
+    ok = tup0.at0();
+    mask = tup0.at1();
+    if (!ok) {
+      return Tuple2<bool, int>(false, 0);
+    }
+    else {
+      if (parser->AtEnd()) {
+        return Tuple2<bool, int>(true, mask);
+      }
+    }
+  }
+}
+
+Tuple2<bool, int> _ParseClauseList(int initial_mask, List<BigStr*>* clause_list) {
+  int mask;
+  bool ok;
+  StackRoot _root0(&clause_list);
+
+  mask = initial_mask;
+  for (ListIter<BigStr*> it(clause_list); !it.Done(); it.Next()) {
+    BigStr* clause = it.Value();
+    StackRoot _for(&clause  );
+    Tuple2<bool, int> tup1 = _ParseClause(mask, initial_mask, clause);
+    ok = tup1.at0();
+    mask = tup1.at1();
+    if (!ok) {
+      return Tuple2<bool, int>(false, 0);
+    }
+  }
+  return Tuple2<bool, int>(true, mask);
+}
+
+Umask::Umask() {
+  ;  // pass
+}
+
+int Umask::Run(cmd_value::Argv* cmd_val) {
+  args::_Attributes* attrs = nullptr;
+  args::Reader* arg_r = nullptr;
+  int mask;
+  BigStr* first_arg = nullptr;
+  syntax_asdl::CompoundWord* first_loc = nullptr;
+  int octal_mask;
+  int initial_mask;
+  bool ok;
+  int new_mask;
+  StackRoot _root0(&cmd_val);
+  StackRoot _root1(&attrs);
+  StackRoot _root2(&arg_r);
+  StackRoot _root3(&first_arg);
+  StackRoot _root4(&first_loc);
+
+  Tuple2<args::_Attributes*, args::Reader*> tup2 = flag_util::ParseCmdVal(S_lsa, cmd_val);
+  attrs = tup2.at0();
+  arg_r = tup2.at1();
+  if (arg_r->AtEnd()) {
+    mask = posix::umask(0);
+    posix::umask(mask);
+    print(StrFormat("0%03o", mask));
+    return 0;
+  }
+  Tuple2<BigStr*, syntax_asdl::CompoundWord*> tup3 = arg_r->ReadRequired2(S_fjk);
+  first_arg = tup3.at0();
+  first_loc = tup3.at1();
+  arg_r->Done();
+  octal_mask = -1;
+  try {
+    octal_mask = to_int(first_arg, 8);
+  }
+  catch (ValueError*) {
+    ;  // pass
+  }
+  if (octal_mask != -1) {
+    posix::umask(octal_mask);
+    return 0;
+  }
+  initial_mask = posix::umask(0);
+  Tuple2<bool, int> tup4 = _ParseClauseList(initial_mask, first_arg->split(S_Cce));
+  ok = tup4.at0();
+  new_mask = tup4.at1();
+  if (!ok) {
+    posix::umask(initial_mask);
+    return 1;
+  }
+  posix::umask(new_mask);
+  return 0;
+}
+
+}  // define namespace umask_osh
 
 namespace alloc {  // define
 
@@ -28823,7 +29132,7 @@ int Process::RunProcess(process::Waiter* waiter, runtime_asdl::trace_t* why) {
   StackRoot _root1(&why);
 
   this->StartProcess(why);
-  if (this->parent_pipeline == nullptr) {
+  if ((this->parent_pipeline == nullptr and this->job_control->Enabled())) {
     this->job_control->MaybeGiveTerminal(posix::getpgid(this->pid));
   }
   return this->Wait(waiter);
@@ -35571,9 +35880,8 @@ bool AppendEvalFlag::OnMatch(BigStr* attached_arg, args::Reader* arg_r, args::_A
   return false;
 }
 
-_ArgAction::_ArgAction(BigStr* name, bool quit_parsing_flags, List<BigStr*>* valid) {
+_ArgAction::_ArgAction(BigStr* name, List<BigStr*>* valid) {
   this->name = name;
-  this->quit_parsing_flags = quit_parsing_flags;
   this->valid = valid;
 }
 
@@ -35600,15 +35908,15 @@ bool _ArgAction::OnMatch(BigStr* attached_arg, args::Reader* arg_r, args::_Attri
     arg_r->Next();
     arg = arg_r->Peek();
     if (arg == nullptr) {
-      e_usage(StrFormat("expected argument to %r", str_concat(S_Bjq, this->name)), arg_r->Location());
+      e_usage(StrFormat("expected argument to '-%s'", this->name), arg_r->Location());
     }
   }
   val = this->_Value(arg, arg_r->Location());
   out->Set(this->name, val);
-  return this->quit_parsing_flags;
+  return false;
 }
 
-SetToInt::SetToInt(BigStr* name) : ::args::_ArgAction(name, false, nullptr) {
+SetToInt::SetToInt(BigStr* name) : ::args::_ArgAction(name, nullptr) {
 }
 
 value_asdl::value_t* SetToInt::_Value(BigStr* arg, syntax_asdl::loc_t* location) {
@@ -35634,7 +35942,7 @@ value_asdl::value_t* SetToInt::_Value(BigStr* arg, syntax_asdl::loc_t* location)
   return Alloc<value::Int>(i);
 }
 
-SetToFloat::SetToFloat(BigStr* name) : ::args::_ArgAction(name, false, nullptr) {
+SetToFloat::SetToFloat(BigStr* name) : ::args::_ArgAction(name, nullptr) {
 }
 
 value_asdl::value_t* SetToFloat::_Value(BigStr* arg, syntax_asdl::loc_t* location) {
@@ -35654,7 +35962,7 @@ value_asdl::value_t* SetToFloat::_Value(BigStr* arg, syntax_asdl::loc_t* locatio
   return Alloc<value::Float>(f);
 }
 
-SetToString::SetToString(BigStr* name, bool quit_parsing_flags, List<BigStr*>* valid) : ::args::_ArgAction(name, quit_parsing_flags, valid) {
+SetToString::SetToString(BigStr* name, List<BigStr*>* valid) : ::args::_ArgAction(name, valid) {
 }
 
 value_asdl::value_t* SetToString::_Value(BigStr* arg, syntax_asdl::loc_t* location) {
@@ -35945,13 +36253,14 @@ args::_Attributes* ParseLikeEcho(flag_spec::_FlagSpec* spec, args::Reader* arg_r
   return out;
 }
 
-args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* arg_r) {
+args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* arg_r, bool sh_dash_c) {
   args::_Attributes* out = nullptr;
-  bool quit;
+  bool set_dash_c;
   BigStr* arg = nullptr;
   args::_Action* action = nullptr;
   BigStr* char0 = nullptr;
   BigStr* attached_arg = nullptr;
+  BigStr* cmd = nullptr;
   StackRoot _root0(&spec);
   StackRoot _root1(&arg_r);
   StackRoot _root2(&out);
@@ -35959,9 +36268,10 @@ args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* ar
   StackRoot _root4(&action);
   StackRoot _root5(&char0);
   StackRoot _root6(&attached_arg);
+  StackRoot _root7(&cmd);
 
   out = Alloc<_Attributes>(spec->defaults);
-  quit = false;
+  set_dash_c = false;
   while (!arg_r->AtEnd()) {
     arg = arg_r->Peek();
     if (maybe_str_equals(arg, S_gpk)) {
@@ -35992,22 +36302,29 @@ args::_Attributes* ParseMore(flag_spec::_FlagSpecAndMore* spec, args::Reader* ar
       for (StrIter it(arg->slice(1)); !it.Done(); it.Next()) {
         BigStr* ch = it.Value();
         StackRoot _for(&ch      );
+        if ((sh_dash_c and str_equals(ch, S_emj))) {
+          set_dash_c = true;
+          continue;
+        }
         action = spec->actions_short->get(ch);
         if (action == nullptr) {
           e_usage(StrFormat("got invalid flag %r", str_concat(S_Bjq, ch)), arg_r->Location());
         }
         attached_arg = list_contains(spec->plus_flags, ch) ? char0 : nullptr;
-        quit = action->OnMatch(attached_arg, arg_r, out);
+        action->OnMatch(attached_arg, arg_r, out);
       }
       arg_r->Next();
-      if (quit) {
-        break;
-      }
-      else {
-        continue;
-      }
+      continue;
     }
     break;
+  }
+  if (set_dash_c) {
+    cmd = arg_r->Peek();
+    if (cmd == nullptr) {
+      e_usage(S_wFx, loc::Missing);
+    }
+    out->Set(S_emj, Alloc<value::Str>(cmd));
+    arg_r->Next();
   }
   return out;
 }
@@ -36070,14 +36387,14 @@ args::_Attributes* Parse(BigStr* spec_name, args::Reader* arg_r) {
   return args::Parse(spec, arg_r);
 }
 
-args::_Attributes* ParseMore(BigStr* spec_name, args::Reader* arg_r) {
+args::_Attributes* ParseMore(BigStr* spec_name, args::Reader* arg_r, bool sh_dash_c) {
   flag_spec::_FlagSpecAndMore* spec = nullptr;
   StackRoot _root0(&spec_name);
   StackRoot _root1(&arg_r);
   StackRoot _root2(&spec);
 
   spec = LookupFlagSpec2(spec_name);
-  return args::ParseMore(spec, arg_r);
+  return args::ParseMore(spec, arg_r, sh_dash_c);
 }
 
 }  // define namespace flag_util
@@ -63258,7 +63575,7 @@ int Main(BigStr* lang, args::Reader* arg_r, Dict<BigStr*, BigStr*>* environ, boo
   argv0 = arg_r->Peek();
   arg_r->Next();
   try {
-    attrs = flag_util::ParseMore(S_sDc_1, arg_r);
+    attrs = flag_util::ParseMore(S_sDc_1, arg_r, true);
   }
   catch (error::Usage* e) {
     print_stderr(StrFormat("%s usage error: %s", lang, e->msg));
@@ -63552,7 +63869,7 @@ int Main(BigStr* lang, args::Reader* arg_r, Dict<BigStr*, BigStr*>* environ, boo
   b->set(builtin_i::json, Alloc<json_ysh::Json>(mem, errfmt, false));
   b->set(builtin_i::json8, Alloc<json_ysh::Json>(mem, errfmt, true));
   b->set(builtin_i::exec_, Alloc<process_osh::Exec>(mem, ext_prog, fd_state, search_path, errfmt));
-  b->set(builtin_i::umask, Alloc<process_osh::Umask>());
+  b->set(builtin_i::umask, Alloc<umask_osh::Umask>());
   b->set(builtin_i::ulimit, Alloc<process_osh::Ulimit>());
   b->set(builtin_i::wait, Alloc<process_osh::Wait>(waiter, job_list, mem, tracer, errfmt));
   b->set(builtin_i::jobs, Alloc<process_osh::Jobs>(job_list));

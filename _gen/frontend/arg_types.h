@@ -890,6 +890,21 @@ class ulimit {
   }
 };
 
+class umask {
+ public:
+  umask(Dict<BigStr*, value_asdl::value_t*>* attrs)
+      : S(static_cast<value::Bool*>(attrs->at(StrFromC("S")))->b),
+        p(static_cast<value::Bool*>(attrs->at(StrFromC("p")))->b) {
+  }
+
+  bool S;
+  bool p;
+
+  static constexpr ObjHeader obj_header() {
+    return ObjHeader::Class(HeapTag::Opaque, kZeroMask, sizeof(umask));
+  }
+};
+
 class unalias {
  public:
   unalias(Dict<BigStr*, value_asdl::value_t*>* attrs)

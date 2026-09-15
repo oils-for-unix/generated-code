@@ -408,6 +408,14 @@ class ulimit(object):
     self.v = cast(value.Bool, attrs['v']).b  # type: bool
 
 
+class umask(object):
+  def __init__(self, attrs):
+    # type: (Dict[str, value_t]) -> None
+
+    self.S = cast(value.Bool, attrs['S']).b  # type: bool
+    self.p = cast(value.Bool, attrs['p']).b  # type: bool
+
+
 class unalias(object):
   def __init__(self, attrs):
     # type: (Dict[str, value_t]) -> None
