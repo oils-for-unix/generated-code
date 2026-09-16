@@ -247,8 +247,9 @@ void ContainsDemo() {
 }
 
 HasDictMember::HasDictMember() {
+  Dict<BigStr*, int>* non_member = nullptr;
   this->builtins = Alloc<Dict<BigStr*, BigStr*>>();
-  auto* non_member = Alloc<Dict<BigStr*, int>>();
+  non_member = Alloc<Dict<BigStr*, int>>();
 }
 
 BigStr* HasDictMember::Get(BigStr* k) {

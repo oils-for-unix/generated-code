@@ -3,12 +3,12 @@
 #include "mycpp/runtime.h"
 
 GLOBAL_STR(S_Aoo, "");
-GLOBAL_STR(S_FcA, "TerminalControl exit");
-GLOBAL_STR(S_fko, "TerminalControl init");
 GLOBAL_STR(S_vwC, "TestDestructor");
 GLOBAL_STR(S_dmc, "Throw and Catch within destructor seems OK");
+GLOBAL_STR(S_kwx, "ValueError");
 GLOBAL_STR(S_cEk, "hi");
 GLOBAL_STR(S_epA, "osh I/O error (main)");
+GLOBAL_STR(S_sbq, "try");
 
 namespace test_io_os_error {  // forward declare
   class ctx_TerminalControl;
@@ -77,13 +77,27 @@ int TestRethrow() {
 }
 
 ctx_TerminalControl::ctx_TerminalControl() {
-  mylib::print_stderr(S_fko);
+  int mylocal_constructor;
+  int x;
+  mylocal_constructor = 99;
+  x = mylocal_constructor;
+  mylib::print_stderr(StrFormat("TerminalControl init %d", x));
 }
 
 ctx_TerminalControl::~ctx_TerminalControl() {
-  mylib::print_stderr(S_FcA);
+  int mylocal_destructor;
+  int x;
+  mylocal_destructor = 88;
+  x = mylocal_destructor;
+  mylib::print_stderr(StrFormat("TerminalControl exit %d", x));
   TestRethrow();
   mylib::print_stderr(S_dmc);
+  try {
+    mylib::print_stderr(S_sbq);
+  }
+  catch (ValueError*) {
+    mylib::print_stderr(S_kwx);
+  }
 }
 
 void TestDestructor() {

@@ -11362,12 +11362,14 @@ ctx_MaybePure::ctx_MaybePure(vm::_Executor* pure_ex, cmd_eval::CommandEvaluator*
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->cmd_ev)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->pure_ex)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->saved)));
+  word_eval::NormalWordEvaluator* word_ev = nullptr;
+  expr_eval::ExprEvaluator* expr_ev = nullptr;
   this->pure_ex = pure_ex;
   if (!pure_ex) {
     return ;
   }
-  word_eval::NormalWordEvaluator* word_ev = cmd_ev->word_ev;
-  expr_eval::ExprEvaluator* expr_ev = cmd_ev->expr_ev;
+  word_ev = cmd_ev->word_ev;
+  expr_ev = cmd_ev->expr_ev;
   this->saved = cmd_ev->shell_ex;
   cmd_ev->shell_ex = pure_ex;
   word_ev->shell_ex = pure_ex;
@@ -11425,7 +11427,8 @@ ctx_FlushStdout::ctx_FlushStdout(List<IOError_OSError*>* err_out) {
 }
 
 ctx_FlushStdout::~ctx_FlushStdout() {
-  IOError_OSError* err = pyos::FlushStdout();
+  IOError_OSError* err = nullptr;
+  err = pyos::FlushStdout();
   if (err != nullptr) {
     this->err_out->append(err);
   }
@@ -14241,11 +14244,13 @@ ctx_HayEval::~ctx_HayEval() {
 }
 
 HayState::HayState() {
-  auto* ch = Alloc<Dict<BigStr*, runtime_asdl::HayNode*>>();
+  Dict<BigStr*, runtime_asdl::HayNode*>* ch = nullptr;
+  Dict<BigStr*, value_asdl::value_t*>* node = nullptr;
+  ch = Alloc<Dict<BigStr*, runtime_asdl::HayNode*>>();
   this->root_defs = Alloc<HayNode>(ch);
   this->cur_defs = this->root_defs;
   this->def_stack = NewList<runtime_asdl::HayNode*>(std::initializer_list<runtime_asdl::HayNode*>{this->root_defs});
-  Dict<BigStr*, value_asdl::value_t*>* node = this->_MakeOutputNode();
+  node = this->_MakeOutputNode();
   this->result_stack = NewList<Dict<BigStr*, value_asdl::value_t*>*>(std::initializer_list<Dict<BigStr*, value_asdl::value_t*>*>{node});
   this->output = nullptr;
 }
@@ -23075,8 +23080,10 @@ void _PrintOpts(Dict<BigStr*, bool>* opts, mylib::BufWriter* f) {
 }
 
 Lookup::Lookup() {
-  completion::UserSpec* empty_spec = Alloc<UserSpec>(Alloc<List<completion::CompletionAction*>>(), Alloc<List<completion::CompletionAction*>>(), Alloc<List<completion::CompletionAction*>>(), Alloc<DefaultPredicate>(), S_Aoo, S_Aoo);
-  Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>* do_nothing = (Alloc<Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>>(_DEFAULT_OPTS, empty_spec));
+  completion::UserSpec* empty_spec = nullptr;
+  Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>* do_nothing = nullptr;
+  empty_spec = Alloc<UserSpec>(Alloc<List<completion::CompletionAction*>>(), Alloc<List<completion::CompletionAction*>>(), Alloc<List<completion::CompletionAction*>>(), Alloc<DefaultPredicate>(), S_Aoo, S_Aoo);
+  do_nothing = (Alloc<Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>>(_DEFAULT_OPTS, empty_spec));
   this->lookup = Alloc<Dict<BigStr*, Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>*>>(std::initializer_list<BigStr*>{S_jaj, S_lgv}, std::initializer_list<Tuple2<Dict<BigStr*, bool>*, completion::UserSpec*>*>{do_nothing, do_nothing});
   this->commands_with_spec_changes = Alloc<List<BigStr*>>();
   this->patterns = Alloc<List<Tuple3<BigStr*, Dict<BigStr*, bool>*, completion::UserSpec*>*>>();
@@ -25263,6 +25270,8 @@ void PureExecutor::PopProcessSub(runtime_asdl::StatusArray* compound_st) {
 }
 
 ShellExecutor::ShellExecutor(state::Mem* mem, optview::Exec* exec_opts, state::MutableOpts* mutable_opts, state::Procs* procs, hay_ysh::HayState* hay_state, Dict<int, vm::_Builtin*>* builtins, dev::Tracer* tracer, ui::ErrorFormatter* errfmt, executor::SearchPath* search_path, process::ExternalProgram* ext_prog, process::Waiter* waiter, process::JobControl* job_control, process::JobList* job_list, process::FdState* fd_state, trap_osh::TrapState* trap_state) : ::vm::_Executor(mem, exec_opts, mutable_opts, procs, hay_state, builtins, tracer, errfmt) {
+  syntax_asdl::Token* tok1 = nullptr;
+  syntax_asdl::Token* tok2 = nullptr;
   this->search_path = search_path;
   this->ext_prog = ext_prog;
   this->waiter = waiter;
@@ -25274,8 +25283,8 @@ ShellExecutor::ShellExecutor(state::Mem* mem, optview::Exec* exec_opts, state::M
   this->process_sub_stack = Alloc<List<executor::_ProcessSubFrame*>>();
   this->clean_frame_pool = Alloc<List<executor::_ProcessSubFrame*>>();
   this->fg_pipeline = nullptr;
-  syntax_asdl::Token* tok1 = lexer::DummyToken(Id::Lit_Chars, S_utc);
-  syntax_asdl::Token* tok2 = lexer::DummyToken(Id::Lit_Chars, S_Deg);
+  tok1 = lexer::DummyToken(Id::Lit_Chars, S_utc);
+  tok2 = lexer::DummyToken(Id::Lit_Chars, S_Deg);
   this->builtin_cat_words = NewList<syntax_asdl::word_t*>(std::initializer_list<syntax_asdl::word_t*>{Alloc<CompoundWord>(NewList<syntax_asdl::word_part_t*>(std::initializer_list<syntax_asdl::word_part_t*>{tok1})), Alloc<CompoundWord>(NewList<syntax_asdl::word_part_t*>(std::initializer_list<syntax_asdl::word_part_t*>{tok2}))});
 }
 
@@ -28545,9 +28554,10 @@ void _AddCallToken(Dict<BigStr*, value_asdl::value_t*>* d, syntax_asdl::Token* t
 ctx_FuncCall::ctx_FuncCall(state::Mem* mem, value::Func* func, syntax_asdl::Token* blame_tok) {
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mem)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->saved_globals)));
+  Dict<BigStr*, runtime_asdl::Cell*>* frame = nullptr;
   this->saved_globals = mem->var_stack->at(0);
   mem->var_stack->set(0, func->module_frame);
-  auto* frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
+  frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
   frame->set(S_hub, Alloc<Cell>(false, false, false, Alloc<value::Frame>(func->captured_frame)));
   mem->var_stack->append(frame);
   mem->debug_stack->append(blame_tok);
@@ -28566,9 +28576,10 @@ ctx_ProcCall::ctx_ProcCall(state::Mem* mem, state::MutableOpts* mutable_opts, va
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mem)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mutable_opts)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->saved_globals)));
+  Dict<BigStr*, runtime_asdl::Cell*>* frame = nullptr;
   this->saved_globals = mem->var_stack->at(0);
   mem->var_stack->set(0, proc->module_frame);
-  auto* frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
+  frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
   if (proc->captured_frame != nullptr) {
     frame->set(S_hub, Alloc<Cell>(false, false, false, Alloc<value::Frame>(proc->captured_frame)));
   }
@@ -28634,10 +28645,12 @@ ctx_EnvObj::~ctx_EnvObj() {
 
 ctx_Registers::ctx_Registers(state::Mem* mem) {
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mem)));
-  int last = mem->last_status->at(-1);
+  int last;
+  Dict<BigStr*, value_asdl::value_t*>* tmp = nullptr;
+  last = mem->last_status->at(-1);
   mem->last_status->append(last);
   mem->try_status->append(0);
-  auto* tmp = Alloc<Dict<BigStr*, value_asdl::value_t*>>();
+  tmp = Alloc<Dict<BigStr*, value_asdl::value_t*>>();
   mem->try_error->append(Alloc<value::Dict>(tmp));
   mem->pipe_status->append(Alloc<List<int>>());
   mem->process_sub_status->append(Alloc<List<int>>());
@@ -28657,9 +28670,10 @@ ctx_Registers::~ctx_Registers() {
 
 ctx_ThisDir::ctx_ThisDir(state::Mem* mem, BigStr* filename) {
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mem)));
+  BigStr* d = nullptr;
   this->do_pop = false;
   if (filename != nullptr) {
-    BigStr* d = os_path::dirname(os_path::abspath(filename));
+    d = os_path::dirname(os_path::abspath(filename));
     mem->this_dir->append(d);
     this->do_pop = true;
   }
@@ -28686,10 +28700,11 @@ runtime_asdl::Cell* _MakeArgvCell(List<BigStr*>* argv) {
 ctx_LoopFrame::ctx_LoopFrame(state::Mem* mem, bool do_new_frame) {
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->mem)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->new_frame)));
+  Dict<BigStr*, runtime_asdl::Cell*>* to_enclose = nullptr;
   this->mem = mem;
   this->do_new_frame = do_new_frame;
   if (this->do_new_frame) {
-    Dict<BigStr*, runtime_asdl::Cell*>* to_enclose = this->mem->var_stack->at(-1);
+    to_enclose = this->mem->var_stack->at(-1);
     this->new_frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
     this->new_frame->set(S_hub, Alloc<Cell>(false, false, false, Alloc<value::Frame>(to_enclose)));
     mem->var_stack->append(this->new_frame);
@@ -28780,16 +28795,18 @@ ctx_ModuleEval::ctx_ModuleEval(state::Mem* mem, syntax_asdl::CompoundWord* use_l
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->out_dict)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->out_errors)));
   gHeap.PushRoot(reinterpret_cast<RawObject**>(&(this->saved_frame)));
+  runtime_asdl::Cell* ps4 = nullptr;
+  runtime_asdl::Cell* env = nullptr;
   this->mem = mem;
   this->out_dict = out_dict;
   this->out_errors = out_errors;
   this->new_frame = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
   this->saved_frame = mem->var_stack->at(0);
-  runtime_asdl::Cell* ps4 = this->saved_frame->get(S_zyo);
+  ps4 = this->saved_frame->get(S_zyo);
   if (ps4) {
     this->new_frame->set(S_zyo, ps4);
   }
-  runtime_asdl::Cell* env = this->saved_frame->get(S_iyA);
+  env = this->saved_frame->get(S_iyA);
   if (env) {
     this->new_frame->set(S_iyA, env);
   }
@@ -28800,22 +28817,25 @@ ctx_ModuleEval::ctx_ModuleEval(state::Mem* mem, syntax_asdl::CompoundWord* use_l
 }
 
 void ctx_ModuleEval::ctx_EXIT() {
+  runtime_asdl::Cell* cell = nullptr;
+  value_asdl::value_t* provide_val = nullptr;
+  BigStr* name = nullptr;
   this->mem->debug_stack->pop();
   this->mem->is_main = this->to_restore;
   this->mem->var_stack->set(0, this->saved_frame);
-  runtime_asdl::Cell* cell = this->new_frame->get(S_zcz);
+  cell = this->new_frame->get(S_zcz);
   if (cell == nullptr) {
     this->out_errors->append(S_ecq);
     return ;
   }
-  value_asdl::value_t* provide_val = cell->val;
+  provide_val = cell->val;
   switch (provide_val->tag()) {
     case value_e::List: {
       for (ListIter<value_asdl::value_t*> it(static_cast<value::List*>(provide_val)->items); !it.Done(); it.Next()) {
         value_asdl::value_t* val = it.Value();
         if (val->tag() == value_e::Str) {
-          BigStr* name = static_cast<value::Str*>(val)->s;
-          runtime_asdl::Cell* cell = this->new_frame->get(name);
+          name = static_cast<value::Str*>(val)->s;
+          cell = this->new_frame->get(name);
           if (cell == nullptr) {
             this->out_errors->append(StrFormat("Name %r was provided, but not defined", name));
             continue;
@@ -28934,11 +28954,14 @@ Tuple2<runtime_asdl::Cell*, Dict<BigStr*, runtime_asdl::Cell*>*> _FrameLookup(Di
 }
 
 Mem::Mem(BigStr* dollar0, List<BigStr*>* argv, alloc::Arena* arena, List<syntax_asdl::debug_frame_t*>* debug_stack, Dict<BigStr*, value_asdl::value_t*>* env_dict, Dict<BigStr*, value_asdl::value_t*>* defaults) {
+  Dict<BigStr*, runtime_asdl::Cell*>* frame0 = nullptr;
+  Dict<BigStr*, value_asdl::value_t*>* tmp = nullptr;
+  value_asdl::Obj* builtins_module = nullptr;
   this->exec_opts = nullptr;
   this->unsafe_arith = nullptr;
   this->dollar0 = dollar0;
   this->argv_stack = NewList<state::_ArgFrame*>(std::initializer_list<state::_ArgFrame*>{Alloc<_ArgFrame>(argv)});
-  auto* frame0 = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
+  frame0 = Alloc<Dict<BigStr*, runtime_asdl::Cell*>>();
   this->var_stack = NewList<Dict<BigStr*, runtime_asdl::Cell*>*>(std::initializer_list<Dict<BigStr*, runtime_asdl::Cell*>*>{frame0});
   this->debug_stack = debug_stack;
   this->env_dict = env_dict;
@@ -28958,7 +28981,7 @@ Mem::Mem(BigStr* dollar0, List<BigStr*>* argv, alloc::Arena* arena, List<syntax_
   this->root_pid = posix::getpid();
   this->last_status = NewList<int>(std::initializer_list<int>{0});
   this->try_status = NewList<int>(std::initializer_list<int>{0});
-  auto* tmp = Alloc<Dict<BigStr*, value_asdl::value_t*>>();
+  tmp = Alloc<Dict<BigStr*, value_asdl::value_t*>>();
   this->try_error = NewList<value::Dict*>(std::initializer_list<value::Dict*>{Alloc<value::Dict>(tmp)});
   this->pipe_status = NewList<List<int>*>(std::initializer_list<List<int>*>{Alloc<List<int>>()});
   this->process_sub_status = NewList<List<int>*>(std::initializer_list<List<int>*>{Alloc<List<int>>()});
@@ -28970,7 +28993,7 @@ Mem::Mem(BigStr* dollar0, List<BigStr*>* argv, alloc::Arena* arena, List<syntax_
   this->is_main = true;
   this->ctx_stack = Alloc<List<Dict<BigStr*, value_asdl::value_t*>*>>();
   this->builtins = Alloc<Dict<BigStr*, value_asdl::value_t*>>();
-  value_asdl::Obj* builtins_module = Alloc<Obj>(nullptr, this->builtins);
+  builtins_module = Alloc<Obj>(nullptr, this->builtins);
   this->builtins->set(S_mmF, builtins_module);
   this->did_ysh_env = false;
   this->env_config = Alloc<sh_init::EnvConfig>(this, defaults);
@@ -42392,12 +42415,13 @@ BigStr* _PromptEvaluatorCache::Get(BigStr* name) {
 }
 
 Evaluator::Evaluator(BigStr* lang, BigStr* version_str, parse_lib::ParseContext* parse_ctx, state::Mem* mem) {
+  int i;
   this->word_ev = nullptr;
   this->expr_ev = nullptr;
   this->global_io = nullptr;
   this->lang = lang;
   this->version_str = version_str;
-  int i = version_str->rfind(S_Aru);
+  i = version_str->rfind(S_Aru);
   this->version_str_short = version_str->slice(0, i);
   this->parse_ctx = parse_ctx;
   this->mem = mem;
